@@ -21,7 +21,7 @@ GameFunctions.prototype.buildScenes = function(){
 		{city:"santa barbara", photo:"santa-barbara.png", 
 			hints: ["It's considered a major college party town", "By the pacific ocean"]}];	
 
-	return scenes;
+	return _.shuffle(scenes);
 }
 
 GameFunctions.prototype.buildNewGame = function(){
@@ -35,14 +35,14 @@ GameFunctions.prototype.buildNewGame = function(){
 }
 
 GameFunctions.prototype.areAllLettersCorrect =  function(){
-	for (i = 0; i < this.letters.length; i++){
-		var letter = this.letters[i];
-		if (!letter.isCorrect()){
-			return false;
+	var correctCount = 0;
+	_.each(this.letters, function(letter){
+		if (letter.isCorrect()){
+			correctCount +=1;
 		}
-	}
+	});
 
-	return true;
+	return correctCount == this.letters.length;
 }
 
 GameFunctions.prototype.nextscene =  function(){
