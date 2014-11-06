@@ -1,0 +1,17 @@
+ul{
+	list-style-image: none;
+}
+
+ul li{
+	list-style: none;
+	float: left;
+	display:inline-block;
+}
+
+ul li input{
+	max-width: 30px;
+	font-size: 1.3em;
+	text-transform: uppercase;
+	margin-left: 5px;
+	text-align: center;
+}
