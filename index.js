@@ -1,150 +1,89 @@
 var game = angular.module('game', []);
 
-var GameFunctions = function(){
+game.factory('sceneService', function($http, $q){
+	return {
+		getScenes: function(){
+			var deferred = $q.defer();
+			$http({method: 'GET', url: 'scenes.json', responseType: "json"})
+				.success(function(data){
+					deferred.resolve(data);
+			});
 
-}
-
-GameFunctions.prototype.start = function(){
-	this.scenes = this.buildScenes();	
-	this.game = this.buildNewGame();
-	this.scene = this.scenes[this.game.scene];	
-	this.letters = this.getLetters();
-}
-
-GameFunctions.prototype.buildScenes = function(){
-	var scenes = [{city: "philadelphia", photo: "philadelphia-liberty-hall.png", 
-			hints: ["A historic city on the east coast"]},
-		{city:"pasadena", photo:"pasadena.png", 
-			hints: ["Its located in Greater Los Angeles", "In the San Gabriel Valley"]},
-		{city:"seattle", photo:"seattle.png", 
-			hints: ["Home of the space needle"]},
-		{city:"santa barbara", photo:"santa-barbara.png", 
-			hints: ["It's considered a major college party town", "By the pacific ocean"]}];	
-
-	return _.shuffle(scenes);
-}
-
-GameFunctions.prototype.buildNewGame = function(){
-	var startscene = Math.round(Math.random() * (this.scenes.length - 1));
-	var game = {
-		scene: startscene,
-		score: 0
+			return deferred.promise;
+		}
 	};
 
-	return game;
-}
+});
 
-GameFunctions.prototype.areAllLettersCorrect =  function(){
-	var correctCount = 0;
-	_.each(this.letters, function(letter){
-		if (letter.isCorrect()){
-			correctCount +=1;
-		}
-	});
+game.controller('mainController', function($scope, sceneService){
 
-	return correctCount == this.letters.length;
-}
+	$scope.getScenes = function(){
+		sceneService.getScenes().then(function(scenes){
+			var gameFunctions = new GameFunctions(scenes);
+			gameFunctions.start();
+			$scope.scenes = gameFunctions.scenes;
+			$scope.game = gameFunctions.game;
+			$scope.scene = gameFunctions.scene;	
+			$scope.letters = gameFunctions.letters;
+			$("#gameboard").show();
+			$("#intro").hide();
 
-GameFunctions.prototype.nextscene =  function(){
-	this.game.scene = (this.game.scene == this.scenes.length - 1) 
-		? 0 : 1 + this.game.scene;
-	this.scene = this.scenes[this.game.scene];	
-	this.letters = this.getLetters();	
-}
-
-GameFunctions.prototype.getLetters = function(){
-	var cityName = this.scene.city;
-	var letters = new Array();
-	var cityNameLength = cityName.length;
-	var maxModifier = Math.round(cityNameLength  * 0.5);
-	var minModifier =Math.round(cityNameLength * 0.3);
-	var modifier = Math.round((Math.random() * (maxModifier - minModifier)) + minModifier);
-
-	var offset = Math.round(Math.random() * (2 - 0) + 0);
-	for (index = 0; index < cityNameLength; index++){
-		var letter =cityName.charAt(index);
-		var character;
-		if (letter == ' '){
-			character = '';
-			letter = '';
-		}
-		else{
-			character = ((offset + index) % modifier == 0)  ? letter : '';
-		}
-
-		letters.push({position: index,
-			character: character,
-			correctCharacter: letter,
-			changed: false,
-			isCorrect: function(){
-				return this.character == this.correctCharacter;
-			}});
-	}	
-
-	return letters;
-}
-
-game.controller('mainController', function($scope){
-
-	var gameFunctions = new GameFunctions();
-	gameFunctions.start();
-	$scope.scenes = gameFunctions.scenes;
-	$scope.game = gameFunctions.game;
-	$scope.scene = gameFunctions.scene;	
-	$scope.letters = gameFunctions.letters;
-
-	function nextScene(){
-		$("#hint").hide();
-		gameFunctions.nextscene();
-		$scope.game = gameFunctions.game;
-		$scope.scene = gameFunctions.scene;	
-		$scope.letters = gameFunctions.letters;
-	}
-
-	$scope.letterChanged = function(letter){
-		letter.changed = true;
-		var score = letter.isCorrect() ? 1 : -2;
-		$scope.game.score += score;
-		if (gameFunctions.areAllLettersCorrect()){
-			nextScene();
-		}
-		else{
-			if (letter.isCorrect()){
-				var nextClass = ".letter" + (parseInt(letter.position) + 1);
-				$(nextClass).focus();
+			function nextScene(){
+				$("#hint").hide();
+				gameFunctions.nextscene();
+				$scope.game = gameFunctions.game;
+				$scope.scene = gameFunctions.scene;	
+				$scope.letters = gameFunctions.letters;
 			}
-		}
-	};
 
-	$scope.getLetterClass = function(letter){
-		if (letter.changed) {
-			return letter.isCorrect() ? 'correct' : 'incorrect'
-		}
-		else{
-			return 'indeterminate';
-		}
-	};
+			$scope.letterChanged = function(letter){
+				letter.changed = true;
+				var score = letter.isCorrect() ? 1 : -2;
+				$scope.game.score += score;
+				if (gameFunctions.areAllLettersCorrect()){
+					nextScene();
+				}
+				else{
+					if (letter.isCorrect()){
+						var nextClass = ".letter" + (parseInt(letter.position) + 1);
+						$(nextClass).focus();
+					}
+				}
+			};
 
-	$scope.hint = function(){
-		var hint = gameFunctions.scene.hints.pop();
-		if (typeof hint == "undefined"){
-			$("#hint").show();
-			$("#hint-text").html("Sorry, no more hints available.");
-			$("#hint").addClass("alert-warning");
-			$("#hint").removeClass("alert-info");
-			return;
-		}
+			$scope.getLetterClass = function(letter){
+				if (letter.changed) {
+					return letter.isCorrect() ? 'correct' : 'incorrect'
+				}
+				else{
+					return 'indeterminate';
+				}
+			};
 
-		$scope.game.score -= 1;
+			$scope.hint = function(){
+				var hint = gameFunctions.scene.hints.pop();
+				if (typeof hint == "undefined"){
+					$("#hint").show();
+					$("#hint-text").html("Sorry, no more hints available.");
+					$("#hint").addClass("alert-warning");
+					$("#hint").removeClass("alert-info");
+					return;
+				}
 
-		$("#hint").show();
-		$("#hint").removeClass("alert-warning");
-		$("#hint").addClass("alert-info");
-		$("#hint-text").html(hint);
-	};
+				$scope.game.score -= 1;
 
-	$scope.skipScene = function(){
-		nextScene();
+				$("#hint").show();
+				$("#hint").removeClass("alert-warning");
+				$("#hint").addClass("alert-info");
+				$("#hint-text").html(hint);
+			};
+
+			$scope.skipScene = function(){
+				nextScene();
+			};
+
+
+		});
 	};
 
 });

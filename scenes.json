@@ -1,0 +1,32 @@
+[
+    {
+        "city": "philadelphia",
+        "photo": "philadelphia-liberty-hall.png",
+        "hints": [
+            "A historic city on the east coast"
+        ]
+    },
+    {
+        "city": "pasadena",
+        "photo": "pasadena.png",
+        "hints": [
+            "Its located in Greater Los Angeles",
+            "In the San Gabriel Valley"
+        ]
+    },
+    {
+        "city": "seattle",
+        "photo": "seattle.png",
+        "hints": [
+            "Home of the space needle"
+        ]
+    },
+    {
+        "city": "santa barbara",
+        "photo": "santa-barbara.png",
+        "hints": [
+            "It's considered a major college party town",
+            "By the pacific ocean"
+        ]
+    }
+]

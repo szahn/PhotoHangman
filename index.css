@@ -82,3 +82,11 @@ button{
 #hint{
 	display:none;
 }
+
+#gameboard{
+	display:none;
+}
+
+#intro{
+	display:block;
+}
